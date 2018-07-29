@@ -16,12 +16,17 @@
 
 package com.franmontiel.persistentcookiejar;
 
+import android.webkit.CookieManager;
+
 import com.franmontiel.persistentcookiejar.cache.CookieCache;
 import com.franmontiel.persistentcookiejar.persistence.CookiePersistor;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import okhttp3.Cookie;
 import okhttp3.HttpUrl;
@@ -75,6 +80,29 @@ public class PersistentCookieJar implements ClearableCookieJar {
         persistor.removeAll(cookiesToRemove);
 
         return validCookies;
+    }
+
+    public void saveInCookieManager(CookieManager cookieManager) {
+        final HashMap<String, StringBuilder> hashSet = new HashMap<>();
+
+        for (Iterator<Cookie> it = cache.iterator(); it.hasNext(); ) {
+            Cookie currentCookie = it.next();
+
+            String domain = currentCookie.domain();
+            StringBuilder builder = hashSet.get(domain);
+            if (builder == null) {
+                builder = new StringBuilder();
+                hashSet.put(domain, builder);
+            } else {
+                builder.append(';');
+            }
+
+            builder.append(currentCookie.name()).append('=').append(currentCookie.value());
+        }
+
+        for(Map.Entry<String, StringBuilder> entry : hashSet.entrySet()) {
+            cookieManager.setCookie(entry.getKey(), entry.getValue().toString());
+        }
     }
 
     private static boolean isCookieExpired(Cookie cookie) {
