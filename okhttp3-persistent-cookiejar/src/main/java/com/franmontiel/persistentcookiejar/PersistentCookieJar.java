@@ -35,10 +35,12 @@ public class PersistentCookieJar implements ClearableCookieJar {
 
     private CookieCache cache;
     private CookiePersistor persistor;
+    private static boolean saveAllCookies;
 
     public PersistentCookieJar(CookieCache cache, CookiePersistor persistor) {
         this.cache = cache;
         this.persistor = persistor;
+        saveAllCookies = false;
 
         this.cache.addAll(persistor.loadAll());
     }
@@ -53,7 +55,7 @@ public class PersistentCookieJar implements ClearableCookieJar {
         List<Cookie> persistentCookies = new ArrayList<>();
 
         for (Cookie cookie : cookies) {
-            if (cookie.persistent()) {
+            if (saveAllCookies || cookie.persistent()) {
                 persistentCookies.add(cookie);
             }
         }
@@ -107,6 +109,10 @@ public class PersistentCookieJar implements ClearableCookieJar {
 
     private static boolean isCookieExpired(Cookie cookie) {
         return cookie.expiresAt() < System.currentTimeMillis();
+    }
+
+    public static void setSaveAllCookies(boolean saveAllCookies) {
+        PersistentCookieJar.saveAllCookies = saveAllCookies;
     }
 
     @Override
